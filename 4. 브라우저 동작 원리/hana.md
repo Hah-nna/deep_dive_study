@@ -1,6 +1,6 @@
 # 브라우저 동작원리
 
-<im src="https://poiemaweb.com/img/client-server.png>
+<img src="https://poiemaweb.com/img/client-server.png>
 
 사용자가 선택한 자원을 서버에 요청하고 브라우저에 표시하는 것이다
 여기서 말하는 자원에는 html, css, javascript, image 등이 속한다(보통은 html문서임)

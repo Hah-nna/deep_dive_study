@@ -4,17 +4,17 @@
 - 캐싱할 필요가 있는 값은 변수에 담아 사용한다.
 - 위치(주소)를 기억하는 저장소이다.
 - 변수란, **메모리 주소(memory address)**에 접근하기 위해 사람이 이해할 수 있는 언어로 지정한 식별자(identifier)이다.
-- 변수 선언에는 `let`, `const`를 사용하고 값을 할당하기 위해 `=`(할당연산자)를 사용한다.
+- 변수 선언에는 `var`, `const`를 사용하고 값을 할당하기 위해 `=`(할당연산자)를 사용한다.
 
 ```javascript
-let x; //변수의 선언
+var x; //변수의 선언
 x = 1; //값의 할당
 ```
 
 # 값
 
 ```javascript
-let str = "Hello World";
+var str = "Hello World";
 ```
 
 예제설명
@@ -90,30 +90,30 @@ function(){}
 
 ```javascript
 //number
-let num1 = 1001;
-let num2 = 10.5;
+var num1 = 1001;
+var num2 = 10.5;
 
 //string
-let string1 = "Hello";
-let string2 = "World";
+var string1 = "Hello";
+var string2 = "World";
 
 //boolean
-let bool = true;
+var bool = true;
 
 //null
-let foo = null;
+var foo = null;
 
 //nudefined
-let bar;
+var bar;
 
 //object
-let obj = { name: "yoon", gender: "female" };
+var obj = { name: "yoon", gender: "female" };
 
 //array
-let arr = [1, 2, 3];
+var arr = [1, 2, 3];
 
 //function
-let foo = function () {};
+var foo = function () {};
 ```
 
 # 연산자
@@ -122,32 +122,32 @@ let foo = function () {};
 
 ```javascript
 //산술 연산자
-let area = 5 * 4; //20
+var area = 5 * 4; //20
 
 //문자열 연산자
-let str = "My name is" + "Lee"; //My name is Lee
+var str = "My name is" + "Lee"; //My name is Lee
 
 //할당 연산자
-let color = "red"; //"red"
+var color = "red"; //"red"
 
 //비교 연산자
-let foo = 3 > 5; // false
+var foo = 3 > 5; // false
 
 //논리 연산자
-let bar = 5 > 3 && 2 < 4; // true
+var bar = 5 > 3 && 2 < 4; // true
 
 //타입 연산자
-let type = typeof "Hi"; //"string"
+var type = typeof "Hi"; //"string"
 
 //인턴스 생성 연산자
-let today = new Date(); // Tue Apr 11 2023 00:10:19 GMT+0900 (한국 표준시)
+var today = new Date(); // Tue Apr 11 2023 00:10:19 GMT+0900 (한국 표준시)
 ```
 
 자바스크립트는 암묵적 타입 강제 변환을 통해 연산을 수행하기 때문에 피연산자의 타입은 반드시 일치할 필요는 없다.
 
 ```javascript
-let foo = 1 + "10"; //"110"
-let bar = 1 * "10"; //10
+var foo = 1 + "10"; //"110"
+var bar = 1 * "10"; //10
 ```
 
 # 키워드
@@ -169,9 +169,9 @@ let bar = 1 * "10"; //10
 문은 리터럴, 연산자(operator), 표현식(expression),키워드(keyword) 등으로 구성되며 세미콜(;)으로 끝나야 한다.
 
 ```javascript
-let x = 5;
-let y = 6;
-let z = x + y;
+var x = 5;
+var y = 6;
+var z = x + y;
 
 console.log(z);
 ```
@@ -198,8 +198,8 @@ for (var i = 0; i < 10; i++) {
 문들은 일반적으로 위에서 아래 순서로 실행된다. 실행 순서는 조건문(if, switch), 반복문(while, for)의 사용으로 제어할 수 있다 이를 흐름제어(control flow)라 한다.
 
 ```javascript
-let time = 10;
-let greeting;
+var time = 10;
+var greeting;
 
 if (time < 10) {
   greeting = "Good morning";
@@ -236,7 +236,7 @@ console.log(greeting);
 
 ```javascript
 //선언문(declaration statement)
-let x = 5 * 10; // 표현식 x = 5 * 10를 포함하는 문이다.
+var x = 5 * 10; // 표현식 x = 5 * 10를 포함하는 문이다.
 
 //할당문(assignment statement)
 x = 100; // 이 자체가 표현식이지만 완전한 문이기도 하다.
@@ -274,7 +274,7 @@ square(2); //4
 함수는 일급 객체로 값을 취급할 수 있다. 따라서 프로퍼티 값으로 함수를 사용할 수 있으며 프로퍼티 값이 함수일 경우, 일반 함수와 구분하기 위해 메소드라 부른다.
 
 ```javascript
-let person = {
+var person = {
   name: "Lee",
   genter: "male",
   sayHello: function () {
@@ -296,7 +296,7 @@ person.sayHello(); Hi! May name is Lee
 배열(array)은 1개의 변수에 여러 개의 값을 순차적으로 저장할 때 사용된다.
 
 ```javascript
-let arr = [1, 2, 3, 4, 5];
+var arr = [1, 2, 3, 4, 5];
 
 console.log(arr[1]); //2
 ```

@@ -267,6 +267,7 @@ console.log(!![]); // true
 | true && anything    | anything |
 | false && anything   | false    |
 
+*or => ||
 ```js
 // 논리합(||) 연산자
 'Cat' || 'Dog'; // 'Cat'

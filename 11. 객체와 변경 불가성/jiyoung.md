@@ -1,3 +1,7 @@
+# 11 Immutablity
+
+# 객체와 변경 불가성(Immutability)
+
 Immutability(변경 불가성)는 객체가 생성된 이후 그 상태를 변경할 수 없는 디자인 패턴을 의미한다.
 
 - Immutability은 함수형 프로그래밍의 핵심원리이다.

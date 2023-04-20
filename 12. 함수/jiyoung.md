@@ -597,5 +597,162 @@ prototype 프로퍼티는 함수가 객체를 생성하는 생성자 함수로 �
 //SyntaxError:unexpected token(
     //함수 선언문은 자바스크립트 엔진에 의해 함수 몸체를 닫는 중괄호 뒤에 ;가 자동 추가된다.
     )
+    function(){
+        //..
+    }(); //=>};();
 
+    //따라소 즉시 실행 함수는 소괄호로 감싸준다.
+    (function(){
+        //...
+    }());
+
+    (function(){
+        // ...
+    })();
+```
+
+자바스크립트에서 문제는 파일이 분리되어 있어도 글로벌 스코프가 하나이고 글로벌 스코프에서 선언된 변수나 함수는 코드 내의 어디서든 접근이 가능 한 것이다.
+
+- 다른 스크립트 파일 내에서 동일한 이름으로 명명된 변수나 함수가 같은 스코프 내에 존재할 경우 원히 않은 결과를 가져올 수 있다.
+
+- 즉시 실행 함수 내에 처리 로직을 모아두면 변수명 또는 함수명의 충돌을 방지할 수 있어 즉시실행 함수를 사용한다.
+
+```javascript
+(function () {
+  var foo = 1;
+  console.log(foo);
+})();
+
+var foo = 100;
+console.log(foo);
+```
+
+## 내부 함수
+
+함수 내부에 정의된 함수를 내부함수(inner function)라고 한다.
+
+- 예시의 내부함수 child는 자신을 포함하고 있는 부모함수 parent의 변수에 접근할 수 있지만 부모함수는 자식함수(내부함수)에 접근할 수 없다.
+
+```javascript
+function parent(param) {
+  var parentVar = param;
+  function child() {
+    var childVar = "lee";
+    console.log(parentVar + "" + childVar); //Hello lee
+  }
+  child();
+  console.log(parentVar + "" + childVar);
+  //uncaught ReferenceError: ChildVar is not defined
+}
+parent("Hello");
+```
+
+- 내부함수는 부모함수의 외부에서 접근할 수 없다.
+
+```javascript
+* function sayHello(name){
+    var text = "Hello" +name;
+    var logHello = function(){console.log(text);}
+    logHello();
+}
+sayHelloo("lee"); //Hello lee
+logHello("lee"); //logHello is not defined
+```
+
+## 재귀 함수
+
+재귀 함수(Recusive function)는 자기 자신을 호출하는 함수이다.
+
+```javascript
+//피보나치 수열
+//피보나치 수는 0과 1로 시작하며 다음 피보나치 수는 바로 앞의 피보나치 수의 합이 된다.
+function fibonacci(n) {
+  if (n < 2) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+console.log(fibonacci(0)); //0
+console.log(fibonacci(1)); //1
+console.log(fibonacci(2)); //1
+console.log(fibonacci(3)); //2
+console.log(fibonacci(4)); //3
+console.log(fibonacci(5)); //4
+console.log(fibonacci(6)); //5
+
+//팩토리얼
+//팰토리얼(계승)은 1부터 자신까지의 모든 양의 정수의 곱이다.
+//n! = 1 * 2 ... * (n-1) * n
+function factorial(n) {
+  if (n < 2) return 1;
+  return factorial(n - 1) * n;
+}
+console.log(factorial(1)); //1
+console.log(factorial(0)); //1
+console.log(factorial(2)); //2
+console.log(factorial(3)); //6
+console.log(factorial(4)); //24
+console.log(factorial(5)); //120
+console.log(factorial(5)); //720
+```
+
+재귀 함수는 자신을 무한히 연쇄 호출하기 때문에 멈출 수 있는 탈출 조건을 만들어야한다.
+
+- 재귀 함수는 반복연산을 간단히 구현할 수 있는 장점이 있지만 무한 반복에 빠질 수 있고 stackoverflow 에러를 발생시킬 수 있으므로 주의해야한다.
+
+대부분의 재귀 함수는 for나 while문으로 구현ㅇ ㅣ가능한다,
+
+- 반복문보다 재귀함수를 통해 직관적으로 이해하기 수운 구현이 가능한 경우에 한정적으로 사용하는 것이 좋다.
+
+## 콜백 함수
+
+콜백 함수(Callback function)는 함수를 명시적으로 호출하는 방법이 아닌 특정 이벤트라 발생했을 때 시스템에 의해 호출되는 함수이다.
+
+- 콜백 함수가 자주 사용되는 대표적인 예로 이벤트 핸들러 처리가 있다.
+
+```html
+<!DOCTYPE html>
+<html>
+  <body>
+    <button id="myButton">Click me</button>
+    <script>
+      var button = document.getElemetById("myButton");
+      button.addEventListener("click", function () {
+        console.log("button clicked!");
+      });
+    </script>
+  </body>
+</html>
+```
+
+javascript의 함수는 **일급객체**이기 때문에 javascript 함수는 변수처럼 사용될 수 있다.
+콜백 함수는 매개변수를 통해 전달되고 전달받은 하수 내부에서 어느 특정시점에서 실행된다.
+
+- setTimeout()의 콜백 함수를 보면, 두번째 매배견수에 전달된 시간이 경과되면 첫번째 매개변수에 전달한 콜백 함수가 호출된다.
+
+```javascript
+setTimeout(function () {
+  console.log("1초 후 출력된다.");
+}, 1000);
+```
+
+- global(호출)-> setTimeout(콜백함수 등록)-> Handler<- Timer Event(호출)
+
+콜백 함수는 주로 \*\*비동기식 처리모델(asynchronous processing model)에 사용된다
+
+- 비동기식 처리 모델은 처리가 종료하면 호출될 함수(콜백함수)를 미리 매개변수에 전달하고 처리가 종료하면 콜백함수를 호출하는 것이다
+
+콜백함수는 콜백 큐에 들어가있다가 해당 이벤트가 발생하면 호출된다.
+
+- 콜백 함수는 클로저이므로 콜백 큐에 단독으로 존재하다가 호출되어도 콜백함수를 전달 받은 함수의 변수에 접근할 수 있다.
+
+```
+function doSomething(){
+    var name = "Lee";
+
+    setTimeout(function(){
+        console.log("My name is" + name);
+    },100);
+}
+
+doSomething(); //My name is Lee
 ```

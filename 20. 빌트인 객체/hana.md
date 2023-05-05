@@ -103,7 +103,7 @@ console.log(x.valueOf) // false;
 
 ```
 
-**1.4 Number ~ 1.9 Array는 뒷 챕터에서 계속 정리할 예정임**
+### 1.4 Number ~ 1.9 Array는 뒷 챕터에서 계속 정리할 예정임
 
 ### 1.10 Error
 

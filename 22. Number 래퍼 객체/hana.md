@@ -1,4 +1,4 @@
-Number 객체는 원시타입 number를 다룰 때 유용한 프로퍼티와 매ㅐ소드를 제공하는 wrapper임. 변수 또는 객체의 프로퍼티가 숫자를 값으로 가지고 있다면 Number 객체의 별도 생성 없이 number 객체의 프로퍼티와 메소드를 사용할 수 있음
+Number 객체는 원시타입 number를 다룰 때 유용한 프로퍼티와 메소드를 제공하는 wrapper임. 변수 또는 객체의 프로퍼티가 숫자를 값으로 가지고 있다면 Number 객체의 별도 생성 없이 number 객체의 프로퍼티와 메소드를 사용할 수 있음
 
 원시 타입 wrapper 객체의 메소드를 사용할 수 있는 이유는 원시 타입으로 프로퍼티나 메소드를 호출할 때 원시 타입과 관련된 wrapper 객체로 일시적으로 변환되어 프로토타입 객체를 공유하게 되기 때문임.
 
@@ -56,7 +56,7 @@ static property로 Number 객체를 생성할 필요없이 `Number.prototypeName
 
 ### 2.1 Number.EPSILON(ES6)
 
-Number.EPSILON은 자바스크립트에서 표현할 수 있는 가장 작은 수임. 이는 임의의 수와 그 수보다 큰 수 중 가장 작은 수와의 차이와 같음. Number.EPSILON는 약 2.2204460492503130808472633361816E-16 또는 2<sup>-52</sup>이다.
+Number.EPSILON은 자바스크립트에서 표현할 수 있는 가장 작은 수임. 이는 임의의 수와 그 수보다 큰 수 중 가장 작은 수와의 차이와 같음. Number.EPSILON는 약 2.2204460492503130808472633361816E-16 또는 2<sup>-52</sup>임
 
 부동소수점 산술 연산 비교는 정확한 값을 기대하기 어려움. 정수는 2진법으로 오차없이 저장이 가능하지만 부동소수점을 표현하는 가장 널리 쓰이는 표준인 IEEE754는 2진법으로 변환시 무한소수가 되어 미세한 오차가 발생할 수 밖에 없는 구조적 한계를 가짐.
 따라서 이러한 오차를 극복하기 위해 Number.EPSILON를 사용함.
@@ -106,7 +106,7 @@ console.log(Number.MIN_VALUE > 0); // true
 문득 보다가 Number.MIN_VALUE와 Number.EPSILON 중 무엇이 더 클까?
 라는 생각이 듦.
 
-Number.MIN_VALUE는 JavaScript에서 표현 가능한 가장 작은 양수 값임. 즉, 0과 -Number.MAX_VALUE 사이의 가장 작은 양수 값을 말함.
+Number.MIN_VALUE는 JavaScript에서 표현 가능한 가장 작은 양수 값임. 즉, 0과 -Number MAX_VALUE 사이의 가장 작은 양수 값을 말함.
 
 반면, Number.EPSILON은 JavaScript에서 1과 1보다 큰 다음 가장 작은 수 사이의 차이임. 이 값은 부동 소수점 연산에서 반올림 오차를 줄이기 위해 사용됨.
 

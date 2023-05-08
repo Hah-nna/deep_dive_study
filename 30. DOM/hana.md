@@ -44,7 +44,7 @@ DOM tree는 브라우저가 HTML 문서를 로드한 후 파싱하여 생성하�
 </html>
 ```
 
-div align="center">
+<div align="center">
 <img src="https://poiemaweb.com/img/dom-tree.png" width="50%" height="50%">
 
 </div>
@@ -65,7 +65,7 @@ DOM tree는 네 종류의 노드로 구성됨
 > **텍스트 노드(text node)**
 > 텍스트 노드는 HTML 요소의 텍스트를 표현함. 텍스트 노드는 요소 노드의 자식이며 자신의 자식 노드를 가질 수 없음. 즉 텍스트 노드는 DOM tree의 최종단임
 
-div align="center">
+<div align="center">
 <img src="https://poiemaweb.com/img/HTMLElement.png" width="50%" height="50%">
 
 </div>
@@ -622,24 +622,28 @@ innerHTML 프로퍼티를 사용하지 않고 새로운 콘텐츠를 수가할 �
 3. 생성된 요소를 DOM에 추가 `appendChild()` 메소드를 사용해 생성된 노드를 DOM tree에 추가함. 또는 `removeChild()` 메소드를 사용해 DOM tree에서 노드를 삭제할 수 있음
 
 **createElement(tagName)**
-태그이름을 인자로 전달하여 요소를 생성함
-return: HTMLElement를 상속받은 객체
-모든 브라우저에서 동작함
+
+- 태그이름을 인자로 전달하여 요소를 생성함
+- return: HTMLElement를 상속받은 객체
+- 모든 브라우저에서 동작함
 
 **createTextNode(text)**
-텍스트를 인자로 전달하여 텍스트 노드를 생성함
-return: Text 객체
-모든 브라우저에서 동작함
+
+- 텍스트를 인자로 전달하여 텍스트 노드를 생성함
+- return: Text 객체
+- 모든 브라우저에서 동작함
 
 **appendChild(Node)**
-인자로 전달한 노드를 마지막 자식 요소로 DOM 트리에 추가함
-return: 추가한 노드
-모든 브라우저에서 동작함
+
+- 인자로 전달한 노드를 마지막 자식 요소로 DOM 트리에 추가함
+- return: 추가한 노드
+- 모든 브라우저에서 동작함
 
 **removeChild(Node)**
-인자로 전달한 노드를 DOM 트리에 제거함
-return: 추가한 노드
-모든 브라우저에서 동작함
+
+- 인자로 전달한 노드를 DOM 트리에 제거함
+- return: 추가한 노드
+- 모든 브라우저에서 동작함
 
 ```
 // 태그이름을 인자로 전달하여 요소를 생성
@@ -713,6 +717,7 @@ one.insertAdjacentHTML('beforeend', '<em class="blue">, Korea</em>');
 | 삽입되는 위치를 선정할 수 있음                            |                                                                                     |
 
 **결론**
+
 innerHTML과 insertAdjacentHTML은 크로스 스크립팅 공격에 취약함. 따라서 untrusted data의 경우 주의해야함. 텍스트를 추가 또는 변경시에는 textContent, 새로운 요소의 추가 또는 삭제시에는 DOM 조작 방식을 사용하도록 하자
 
 ## 5. style

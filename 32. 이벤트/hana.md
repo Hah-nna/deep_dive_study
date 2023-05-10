@@ -463,26 +463,667 @@ addEventListener 메소드에서 지정한 이벤트 핸들러는 콜백 함수�
 
 ## 6. 이벤트의 흐름
 
+계층적 구조에 초함되어 있는 HTML 요소에 이벤트가 발생할 경우 연쇄적 반응이 일어남. 즉 이벤트가 전파되는데 전파 방향에 따라 버블링과 캡처링으로 구분할 수 있음
+
+**주의할 것은 버블링과 캡처링을 둘 중에 하나만 발생하는 것이 아니라 캡처링부터 시작해 버블링으로 종료한다는 것임.** 즉, 이벤트가 발생했을 때 캡처링과 버블링은 순차적으로 발생함
+참고로 캡처링은 IE8 이하에서 지원하지 않음
+
+<div align="center">
+<img src="https://poiemaweb.com/img/eventflow.svg" width="50%" height="50%">
+</div>
+
+**addEventListener 메소드의 세 번째 매개변수에 true를 설정하면 캡처링으로 전파되는 이벤트를 캐치하고 false 또는 미설정하면 버블링으로 전파되는 이벤트를 캐치함**
+
+```
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    html { border:1px solid red; padding:30px; text-align: center; }
+    body { border:1px solid green; padding:30px; }
+    .top {
+      width: 300px; height: 300px;
+      background-color: red;
+      margin: auto;
+    }
+    .middle {
+      width: 200px; height: 200px;
+      background-color: blue;
+      position: relative; top: 34px; left: 50px;
+    }
+    .bottom {
+      width: 100px; height: 100px;
+      background-color: yellow;
+      position: relative; top: 34px; left: 50px;
+      line-height: 100px;
+    }
+  </style>
+</head>
+<body>
+  body
+  <div class="top">top
+    <div class="middle">middle
+      <div class="bottom">bottom</div>
+    </div>
+  </div>
+  <script>
+  // true: capturing / false: bubbling
+  const useCature = true;
+
+  const handler = function (e) {
+    const phases = ['capturing', 'target', 'bubbling'];
+    const node = this.nodeName + (this.className ? '.' + this.className : '');
+    // eventPhase: 이벤트 흐름 상에서 어느 phase에 있는지를 반환한다.
+    // 0 : 이벤트 없음 / 1 : 캡처링 단계 / 2 : 타깃 / 3 : 버블링 단계
+    console.log(node, phases[e.eventPhase - 1]);
+    alert(node + ' : ' + phases[e.eventPhase - 1]);
+  };
+
+  document.querySelector('html').addEventListener('click', handler, useCature);
+  document.querySelector('body').addEventListener('click', handler, useCature);
+
+  document.querySelector('div.top').addEventListener('click', handler, useCature);
+  document.querySelector('div.middle').addEventListener('click', handler, useCature);
+  document.querySelector('div.bottom').addEventListener('click', handler, useCature);
+  </script>
+</body>
+</html>
+```
+
+버블링의 경우 어떻게 동작하는지 아래의 예제를 보자
+
+```
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    html, body { height: 100%; }
+  </style>
+<body>
+  <p>버블링 이벤트 <button>버튼</button></p>
+  <script>
+    const body = document.querySelector('body');
+    const para = document.querySelector('p');
+    const button = document.querySelector('button');
+
+    // 버블링
+    body.addEventListener('click', function () {
+      console.log('Handler for body.');
+    });
+
+    // 버블링
+    para.addEventListener('click', function () {
+      console.log('Handler for paragraph.');
+    });
+
+    // 버블링
+    button.addEventListener('click', function () {
+      console.log('Handler for button.');
+    });
+  </script>
+</body>
+</html>
+```
+
+위 코드는 모든 이벤트 핸들러가 이벤트 흐름을 버블링만 캐치함. 즉, 캡처링 이벤트 흐음에 대해서는 동작하지 않음. 따라서 button에서 이벤트가 발생하면 모든 이벤트 핸들러는 버블링에 대해 동작하여 아래와 같이 로그됨
+
+```
+Handler for button.
+Handler for paragraph.
+Handler for body.
+```
+
+만약 p요소에서 이벤트가 발생한다면 p요소와 이벤트 핸들러는 버블링에 대해 동작하여 아래와 같이 로그됨
+
+```
+Handler for paragraph.
+Handler for body.
+```
+
+위의 예제를 보다가 버블링을 막으려면(btn에만 이벤트가 실행되게 하려면) 어떻게 해야할까?
+
+```
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    html, body { height: 100%; }
+  </style>
+<body>
+  <p>버블링 이벤트 <button>버튼</button></p>
+  <script>
+    const body = document.querySelector('body');
+    const para = document.querySelector('p');
+    const button = document.querySelector('button');
+
+    button.addEventListener('click', function (event) {
+      event.stopPropagation(); // 이벤트 전파를 막음
+      console.log('Handler for button.');
+    });
+
+    para.addEventListener('click', function () {
+      console.log('Handler for paragraph.');
+      event.stopPropagation();
+    });
+
+    body.addEventListener('click', function () {
+      console.log('Handler for body.');
+      event.stopPropagation();
+    });
+  </script>
+</body>
+</html>
+```
+
+event.stopPropagation()를 사용해 이벤트 전파를 막아서 각각의 요소에서만 이벤트 핸들러가 동작하게 함
+예를 들어 button 요소를 누르면 동작했던 나머지 요소에 등록된 이벤트 핸들러 동작하지 않음
+
+캡처링의 경우는 어떻게 동작하는지 아래의 예시를 보자
+
+```
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    html, body { height: 100%; }
+  </style>
+<body>
+  <p>캡처링 이벤트 <button>버튼</button></p>
+  <script>
+    const body = document.querySelector('body');
+    const para = document.querySelector('p');
+    const button = document.querySelector('button');
+
+    // 캡처링
+    body.addEventListener('click', function () {
+      console.log('Handler for body.');
+    }, true);
+
+    // 캡처링
+    para.addEventListener('click', function () {
+      console.log('Handler for paragraph.');
+    }, true);
+
+    // 캡처링
+    button.addEventListener('click', function () {
+      console.log('Handler for button.');
+    }, true);
+  </script>
+</body>
+</html>
+```
+
+위의 예시는 모든 이벤트 핸들러가 이벤트 흐름을 캡처링만 캐치함. 즉, 버블링 이벤트 흐름에 대해서는 동작하지 않음. 따라서 button에서 이벤트가 발생하면 모든 이벤트 핸들러는 캡처링에 대해 동작해 아래와 같이 로그됨
+
+```
+Handler for body.
+Handler for paragraph.
+Handler for button.
+```
+
+만약 p 요소에서 이벤트가 발생한다면 p 요소와 body 요소의 이벤트 핸들러는 캡처링에 대해 동작해 아래와 같이 로그됨
+
+```
+Handler for body.
+Handler for paragraph.
+```
+
+아래는 버블링과 캡처링이 혼용되는 예시임
+
+```
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    html, body { height: 100%; }
+  </style>
+<body>
+  <p>버블링과 캡처링 이벤트 <button>버튼</button></p>
+  <script>
+    const body = document.querySelector('body');
+    const para = document.querySelector('p');
+    const button = document.querySelector('button');
+
+    // 버블링
+    body.addEventListener('click', function () {
+      console.log('Handler for body.');
+    });
+
+    // 캡처링
+    para.addEventListener('click', function () {
+      console.log('Handler for paragraph.');
+    }, true);
+
+    // 버블링
+    button.addEventListener('click', function () {
+      console.log('Handler for button.');
+    });
+  </script>
+</body>
+</html>
+```
+
+위 코드의 경우 body, button 요소는 버블링 이벤트 흐름만을 캐치하고 p요소는 캡처링 이벤트 흐름만을 캐치함. 따라서 button에서 이벤트가 발생하면 먼저 캡처링이 발생하므로 p 요소의 이벤트 핸들러가 동작하고 그후 버블링이 발생해 button, body 요소의 이벤트 핸들러가 동작함
+
+```
+Handler for paragraph.
+Handler for button.
+Handler for body.
+```
+
+만약 p요소에서 이벤트가 발생한다면 캡처링에 대해 p 요소의 이벤트 핸들러가 동작하고 버블링에 대해 body 요소의 이벤트 핸들러가 동작함
+
+```
+Handler for paragraph.
+Handler for body.
+```
+
 ## 7. Event 객체
+
+event 객체는 이벤트를 발생시킨 요소와 발생한 이벤트에 대한 유용한 정보를 제공함. 이벤트가 발생하면 event 객체는 동적으로 생성되며 이벤트를 처리할 수 있는 이벤트 핸들러에 인자로 전달됨
+
+```
+<!DOCTYPE html>
+<html>
+<body>
+  <p>클릭하세요. 클릭한 곳의 좌표가 표시됩니다.</p>
+  <em class="message"></em>
+  <script>
+  function showCoords(e) { // e: event object
+    const msg = document.querySelector('.message');
+    msg.innerHTML =
+      'clientX value: ' + e.clientX + '<br>' +
+      'clientY value: ' + e.clientY;
+  }
+  addEventListener('click', showCoords);
+  </script>
+</body>
+</html>
+```
+
+위와 같이 이벤트 객체는 이벤트 핸들러에 암묵적으로 전달됨. 하지만 이벤트 핸들러를 선언할 때 이벤트 객체를 전달받을 첫 번째 매개변수를 명시적으로 선언해야함. 예제에서 e라는 이름으로 매개변수를 지정했으나 다른 매개변수 이름을 사용해도 괜찮음
+
+```
+<!DOCTYPE html>
+<html>
+<body>
+  <em class="message"></em>
+  <script>
+  function showCoords(e, msg) {
+    msg.innerHTML =
+      'clientX value: ' + e.clientX + '<br>' +
+      'clientY value: ' + e.clientY;
+  }
+
+  const msg = document.querySelector('.message');
+
+  addEventListener('click', function (e) {
+    showCoords(e, msg);
+  });
+  </script>
+</body>
+</html>
+```
 
 ### 7.1 Event Property
 
 #### 7.1.1 Event.target
 
+실제로 이벤트를 발생시킨 요소를 가리킴
+
+```
+<!DOCTYPE html>
+<html>
+<body>
+  <div class="container">
+    <button id="btn1">Hide me 1</button>
+    <button id="btn2">Hide me 2</button>
+  </div>
+
+  <script>
+    function hide(e) {
+      e.target.style.visibility = 'hidden';
+      // 동일하게 동작한다.
+      // this.style.visibility = 'hidden';
+    }
+
+    document.getElementById('btn1').addEventListener('click', hide);
+    document.getElementById('btn2').addEventListener('click', hide);
+  </script>
+</body>
+</html>
+```
+
+hide 함수를 특정 노드에 한정하여 사용하지 않고 범용적으로 사용하기 위해 이벤트 객체의 target 프로퍼티를 사용함. 위 예시의 경우 hide 함수 내부의 e.target은 언제나 이벤트가 바인딩된 요소를 가리키는 this와 일치함. 하지만 버튼별로 이벤트를 바인딩하고 있기 때문에 버튼이 많은 경우 위 방법은 바람직하지 않아보임
+
+이벤트 위임을 사용해 위의 예시를 아래와 같이 수정함
+
+```
+<!DOCTYPE html>
+<html>
+<body>
+  <div class="container">
+    <button id="btn1">Hide me 1</button>
+    <button id="btn2">Hide me 2</button>
+  </div>
+
+  <script>
+    const container = document.querySelector('.container');
+
+    function hide(e) {
+      // e.target은 실제로 이벤트를 발생시킨 DOM 요소를 가리킴.
+      e.target.style.visibility = 'hidden';
+      // this는 이벤트에 바인딩된 DOM 요소(.container)를 가리킴. 따라서 .container 요소를 감춤.
+      // this.style.visibility = 'hidden';
+    }
+
+    container.addEventListener('click', hide);
+  </script>
+</body>
+</html>
+```
+
+위 예시의 경우 this는 이벤트에 바인딩된 DOM요소(.container)를 가리킴. 따라서 container의 요소를 감춤. e.target은 실제로 이벤트를 발생시킨 DOM 요소(button 또는 .container)를 가리킴. Event.target은 this와 완전히 일치하지 않음
+
 #### 7.1.2 Event.currentTarget
+
+이벤트에 바인딩된 DOM 요소를 가리킴. 즉 addEventListener 앞에 기술된 객체를 가리킴
+
+addEventListener 메소드에서 지정한 이벤트 핸들러 내부의 this는 이벤트에 바인딩된 DOM 요소를 가리키며 이것은 이벤트 객체의 currentTarget 프로퍼티와 같음. 따라서 이벤트 핸들러 함수 내애서 currentTarget과 this는 언제나 일치함
+
+```
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    html, body { height: 100%; }
+    div { height: 100%; }
+  </style>
+</head>
+<body>
+  <div>
+    <button>배경색 변경</button>
+  </div>
+  <script>
+    function bluify(e) {
+      // this: 이벤트에 바인딩된 DOM 요소(div 요소)
+      console.log('this: ', this);
+      // target: 실제로 이벤트를 발생시킨 요소(button 요소 또는 div 요소)
+      console.log('e.target:', e.target);
+      // currentTarget: 이벤트에 바인딩된 DOM 요소(div 요소)
+      console.log('e.currentTarget: ', e.currentTarget);
+
+      // 언제나 true
+      console.log(this === e.currentTarget);
+      // currentTarget과 target이 같은 객체일 때 true
+      console.log(this === e.target);
+
+      // click 이벤트가 발생하면 이벤트를 발생시킨 요소(target)과는 상관없이 this(이벤트에 바인딩된 div 요소)의 배경색이 변경됨
+      this.style.backgroundColor = '#A5D9F3';
+    }
+
+    // div 요소에 이벤트 핸들러가 바인딩되어 있음
+    // 자식 요소인 button이 발생시킨 이벤트가 버블링되어 div 요소에도 전파됨.
+    // 따라서 div 요소에 이벤트 핸들러가 바인딩되어 있으면 자식 요소인 button이 발생시킨 이벤트를 div 요소에서도 핸들링할 수 있음
+    document.querySelector('div').addEventListener('click', bluify);
+  </script>
+</body>
+</html>
+```
 
 #### 7.1.3 Event.type
 
+발생한 이벤트의 종류를 나타내는 문자열을 반환함
+
+```
+<!DOCTYPE html>
+<html>
+<body>
+  <p>키를 입력하세요</p>
+  <em class="message"></em>
+  <script>
+  const body = document.querySelector('body');
+
+  function getEventType(e) {
+    console.log(e);
+    document.querySelector('.message').innerHTML = `${e.type} : ${e.keyCode}`;
+  }
+
+  body.addEventListener('keydown', getEventType);
+  body.addEventListener('keyup', getEventType);
+  </script>
+</body>
+</html>
+```
+
 #### 7.1.4 Event.cancelable
+
+요소의 기본동작을 취소시킬 수 있는지 여부를 나타냄
+
+```
+<!DOCTYPE html>
+<html>
+<body>
+  <a href="poiemaweb.com">Go to poiemaweb.com</a>
+  <script>
+  const elem = document.querySelector('a');
+
+  elem.addEventListener('click', function (e) {
+    console.log(e.cancelable);
+
+    // 기본 동작을 중단시킴
+    e.preventDefault();
+  });
+  </script>
+</body>
+</html>
+```
+
+a요소를 누르면 true가 콘솔에 찍히고 preventDefault()로 기본 동작을 중단함
 
 #### 7.1.5 Event.eventPhase
 
+이벤트 흐름 상에서 어느 단계(event phase)에 있는지를 반환함
+
+| 반환값 | 의미        |
+| ------ | ----------- |
+| 0      | 이벤트 없음 |
+| 1      | 캡처링 단계 |
+| 2      | 타깃        |
+| 3      | 버블링 단계 |
+
 ## 8. 이벤트 위임
+
+```
+<ul id="post-list">
+  <li id="post-1">Item 1</li>
+  <li id="post-2">Item 2</li>
+  <li id="post-3">Item 3</li>
+  <li id="post-4">Item 4</li>
+  <li id="post-5">Item 5</li>
+  <li id="post-6">Item 6</li>
+</ul>
+```
+
+모든 li요소가 클릭 이벤트에 반응하는 처리를 구현하고 싶은 경우 li 요소에 이벤트 핸들러를 바인딩하면 총 6개의 이벤트 핸들러를 바인딩해야함
+
+```
+function printId() {
+  console.log(this.id);
+}
+
+document.querySelector('#post-1').addEventListener('click', printId);
+document.querySelector('#post-2').addEventListener('click', printId);
+document.querySelector('#post-3').addEventListener('click', printId);
+document.querySelector('#post-4').addEventListener('click', printId);
+document.querySelector('#post-5').addEventListener('click', printId);
+document.querySelector('#post-6').addEventListener('click', printId);
+```
+
+만약 li 요소가 1억개라면 1억개의 이벤트 핸들러를 바인딩해야함. 이는 실행 속도 저하의 원인이 될 뿐만 아니라 코드 또한 매우 길어지며 작성 또한 불편함.
+
+그리고 동적으로 li 요소가 추가되는 경우 아직 추가되지 않은 요소는 DOM에 존재하지 않으므로 이벤트 핸들러를 바인딩할 수 없음. 이러한 경우 이벤트 위임을 사용함
+
+이벤트 위임은 다수의 자식 요소에 각각 이벤트 핸들러를 바인딩하는 대신 하나의 부모 요소에 이벤트 핸들러를 바인딩하는 방법임. 위의 경우 6개의 자식 요소에 각각 이벤트 핸들러를 바인딩하는 대신 부모요소에 이벤트 핸들러를 바인딩하는 것임
+
+또한 DOM 트리에 새로운 li를 추가하더라도 이벤트 처리는 부모요소인 ul에 위임되었기 때문에 새로운 요소에 이벤트 핸들러를 다시 바인딩할 필요가 없음
+
+이는 이벤트가 이벤트 흐름에 의해 이벤트를 발생시킨 요소의 부모 요소에도 영향(버블링)을 미치기 때문에 가능함.
+실제로 이벤트를 발생시킨 요소를 알아내기 위해서는 event.target을 사용함
+
+```
+<!DOCTYPE html>
+<html>
+<body>
+  <ul class="post-list">
+    <li id="post-1">Item 1</li>
+    <li id="post-2">Item 2</li>
+    <li id="post-3">Item 3</li>
+    <li id="post-4">Item 4</li>
+    <li id="post-5">Item 5</li>
+    <li id="post-6">Item 6</li>
+  </ul>
+  <div class="msg">
+  <script>
+    const msg = document.querySelector('.msg');
+    const list = document.querySelector('.post-list')
+
+    list.addEventListener('click', function (e) {
+      // 이벤트를 발생시킨 요소
+      console.log('[target]: ' + e.target);
+      // 이벤트를 발생시킨 요소의 nodeName
+      console.log('[target.nodeName]: ' + e.target.nodeName);
+
+      // li 요소 이외의 요소에서 발생한 이벤트는 대응하지 않음
+      if (e.target && e.target.nodeName === 'LI') {
+        msg.innerHTML = 'li#' + e.target.id + ' was clicked!';
+      }
+    });
+  </script>
+</body>
+</html>
+```
 
 ## 9. 기본 동작의 변경
 
+이벤트 객체는 요소의 기본 동작과 요소의 부모 요소들이 이벤트에 대응하는 방법을 변경하기 위한 메소드를 가지고 있음
+
 ### 9.1 Event.preventDefault()
+
+폼을 submit하거나 링크를 클릭하면 다른 페이지로 이동하게 됨. 이와 같이 요소가 가지고 있는 기본 동작을 중단 시키기 위한 메소드가 preventDefault()임
+
+```
+<!DOCTYPE html>
+<html>
+<body>
+  <a href="http://www.google.com">go</a>
+  <script>
+  document.querySelector('a').addEventListener('click', function (e) {
+    console.log(e.target, e.target.nodeName);
+
+    // a 요소의 기본 동작을 중단한다.
+    e.preventDefault();
+  });
+  </script>
+</body>
+</html>
+```
 
 ### 9.2 Event.stopPropagation()
 
+어느 한 요소를 이용해 이벤트를 처리한 후 이벤트가 부모 요소로 전파되는 것을 중단 시키기 위한 메소드임. 부모 요소에 동일한 이벤트에 대한 다른 핸들러가 지정되어 있을 경우 사용함
+
+아래 예시를 보면 부모 요소와 자식 요소에 모두 click 이벤트에 대한 핸들러가 지정되어 있음. 하지만 부모 요소와 자식 요소의 이벤트를 각각 별도로 처리하기 위해 button 요소의 이벤트 전파(버블링)을 중단시키기 위해서는 stopPropagation 메소드를 사용해 이벤트 전파를 중단할 필요가 있음
+
+```
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    html, body { height: 100%;}
+  </style>
+</head>
+<body>
+  <p>버튼을 클릭하면 이벤트 전파를 중단함 <button>버튼</button></p>
+  <script>
+    const body = document.querySelector('body');
+    const para = document.querySelector('p');
+    const button = document.querySelector('button');
+
+    // 버블링
+    body.addEventListener('click', function () {
+      console.log('Handler for body.');
+    });
+
+    // 버블링
+    para.addEventListener('click', function () {
+      console.log('Handler for paragraph.');
+    });
+
+    // 버블링
+    button.addEventListener('click', function (event) {
+      console.log('Handler for button.');
+
+      // 이벤트 전파를 중단한다.
+      event.stopPropagation();
+    });
+  </script>
+</body>
+</html>
+
+```
+
 ### 9.3 preventDefault & stopPropagation
+
+기본 동작의 중단과 버블링 또는 캡처링의 중단을 동시에 실시하는 방법은 다음과 같음
+
+```
+return false;
+```
+
+이 방법은 jQuery를 사용할 때와 아래와 같은 방법으로 사용할 때만 적용됨
+
+```
+<!DOCTYPE html>
+<html>
+<body>
+  <a href="http://www.google.com" onclick='return handleEvent()'>go</a>
+  <script>
+  function handleEvent() {
+    return false;
+  }
+  </script>
+</body>
+</html>
+```
+
+```
+<!DOCTYPE html>
+<html>
+<body>
+  <div>
+    <a href="http://www.google.com">go</a>
+  </div>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.3/jquery.min.js"></script>
+  <script>
+
+  // within jQuery
+  $('a').click(function (e) {
+    e.preventDefault(); // OK
+  });
+
+  $('a').click(function () {
+    return false; // OK --> e.preventDefault() & e.stopPropagation().
+  });
+
+  // pure js
+  document.querySelector('a').addEventListener('click', function(e) {
+    // e.preventDefault(); // OK
+    return false;       // NG!!!!!
+  });
+  </script>
+</body>
+</html>
+```
+
+이 방법은 기본 동작의 중단과 이벤트 흐름의 중단 모두 적용되므로 이 두 가지 중 하나만 중단하기 위해서는 preventDefault() 또는 stopPropagation() 메소드를 개별적으로 사용함

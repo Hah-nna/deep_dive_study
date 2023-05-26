@@ -107,16 +107,340 @@ try 블록 내에서 setTimeout 함수가 실행되면 1초 후에 콜백 함수
 
 ## 3. 프로미스의 생성
 
+프로미스는 Promise 생성자 함수를 통해 인스턴스화함. Promise 생성자 함수는 비동기 작업을 수행할 콜백 함수를 인자로 전달받는데 이 콜백 함수는 resolve와 reject 함수를 전달받음
+
+```
+// Promise 객체의 생성
+const promise = new Promise((resolve, reject) => {
+  // 비동기 작업을 수행함
+
+  if (/* 비동기 작업 수행 성공 */) {
+    resolve('result');
+  }
+  else { /* 비동기 작업 수행 실패 */
+    reject('failure reason');
+  }
+});
+```
+
+Promise는 비동기 처리가 성공(fulfilled)했는지 또는 실패(rejected)했는지 등의 상태 정보를 가짐
+
+| 상태      | 의미                                      | 구현                                               |
+| --------- | ----------------------------------------- | -------------------------------------------------- |
+| pending   | 비동기 처리가 아직 수행되지 않은 상태     | resolve 또는 reject 함수가 아직 호출되지 않은 상태 |
+| fulfilled | 비동기 처리가 수행된 상태(성공)           | resolve 함수가 호출된 상태                         |
+| rejected  | 비동기 처리가 수행된 상태(실패)           | reject 함수가 호출된 상태                          |
+| settled   | 비동기 처리가 수행된 상태(성공 또는 실패) | resolve 또는 reject 함수가 호출된 상태             |
+
+Promise 생성자 함수가 인자로 전달받은 콜백 함수는 내부에서 비동기 처리 작업을 수행함. 이때 비동기 처리가 성공하면 콜백함수의 인자로 전달받은 resolve 함수를 호출함. 이때 프로미스는 fulfilled 상태가 됨. 비동기 처리가 실패하면 reject 함수를 호출함. 이때 프로미스는 reject 상태가 됨
+
+Promise를 사용하여 비동기 함수를 정의하면 아래와 같음
+
+```
+const promiseAjax = (method, url, payload) => {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url);
+    xhr.setRequestHeader('Content-type', 'application/json');
+    xhr.send(JSON.stringify(payload));
+
+    xhr.onreadystatechange = function () {
+      // 서버 응답 완료가 아니면 무시
+      if (xhr.readyState !== XMLHttpRequest.DONE) return;
+
+      if (xhr.status >= 200 && xhr.status < 400) {
+        // resolve 메소드를 호출하면서 처리 결과를 전달
+        resolve(xhr.response); // Success!
+      } else {
+        // reject 메소드를 호출하면서 에러 메시지를 전달
+        reject(new Error(xhr.status)); // Failed...
+      }
+    };
+  });
+};
+```
+
+위 예제처럼 비동기 함수 내에서 Promise 객체를 생성하고 그 내부에서 비동기 처리를 구현함. 이때 비동기 처리에 성공하면 resolve 메소드를 호출함. 이때 resolve 메소드의 인자로 비동기 처리 결과를 전달함. 이 처리 결과는 Promise 객체의 후속 처리 메소드로 전달된다. 만약 비동기 처리에 실패하면 reject 메소드를 호출함. 이때 reject 메소드의 인자로 에러 메시지를 전달함. 이 에러 메시지는 Promise 객체의 후속 처리 메소드로 전달됨
+
 ## 4. 프로미스의 후속 처리 메소드
+
+Promise로 구현된 비동기 함수는 Promise 객체를 반환해야함. Promise로 구현된 비동기 함수를 호출하는 측에서는 Promise 객체의 후속 처리 메소드(then, catch)를 통해 비동기 처리 결과 또는 에러 메시지를 전달받아 처리함. Promise 객체는 상태를 갖는다고 했음. 이 상태에 따라 후속 처리 메소드를 체이닝 방식으로 호출함. Promise의 후속 처리 메소드는 다음과 같음
+
+> **then**
+> then 메소드는 두 개의 콜백 함수를 인자로 전달받음. 첫 번째 콜백 함수는 성공(fulfilled)시 호출되고 두 번째 함수는 실패(reject)시 호출됨
+
+> catch
+> 예외(비동기 처리에서 발생한 에러와 then 메소드에서 발생한 에러)가 발생하면 호출됨. catch 메소드는 Promise를 반환함
+
+앞에서 프로미스로 정의한 비동기 함수 get을 사용해 보자. get 함수는 XMLHttpRequest 객체를 통해 Ajax 요청을 수행하므로 브라우저에서 실행하여야 함
+
+```
+<!DOCTYPE html>
+<html>
+<body>
+<!DOCTYPE html>
+<html>
+<body>
+  <pre class="result"></pre>
+  <script>
+    const $result = document.querySelector('.result');
+    const render = content => { $result.textContent = JSON.stringify(content, null, 2); };
+
+    const promiseAjax = (method, url, payload) => {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open(method, url);
+        xhr.setRequestHeader('Content-type', 'application/json');
+        xhr.send(JSON.stringify(payload));
+
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState !== XMLHttpRequest.DONE) return;
+
+          if (xhr.status >= 200 && xhr.status < 400) {
+            resolve(xhr.response); // Success!
+          } else {
+            reject(new Error(xhr.status)); // Failed...
+          }
+        };
+      });
+    };
+
+    /*
+      비동기 함수 promiseAjax은 Promise 객체를 반환함
+      Promise 객체의 후속 메소드를 사용하여 비동기 처리 결과에 대한 후속 처리를 수행함
+    */
+    promiseAjax('GET', 'http://jsonplaceholder.typicode.com/posts/1')
+      .then(JSON.parse)
+      .then(
+        // 첫 번째 콜백 함수는 성공(fulfilled, resolve 함수가 호출된 상태) 시 호출됨
+        render,
+        // 두 번째 함수는 실패(rejected, reject 함수가 호출된 상태) 시 호출됨
+        console.error
+      );
+  </script>
+</body>
+</html>
+```
 
 ## 5. 프로미스의 에러 처리
 
+위 예제의 비동기 함수 get은 Promise 객체를 반환함. 비동기 처리 결과에 대한 후속 처리는 Promise 객체가 제공하는 후속 처리 메서드 then, catch, finally를 사용하여 수행함. 비동기 처리 시에 발생한 에러는 then 메서드의 두 번째 콜백 함수로 처리할 수 있음
+
+```
+const wrongUrl = 'https://jsonplaceholder.typicode.com/XXX/1';
+
+// 부적절한 URL이 지정되었기 때문에 에러가 발생함
+promiseAjax(wrongUrl)
+  .then(res => console.log(res), err => console.error(err)); // error: 404
+```
+
+비동기 처리에서 발생한 에러는 Promise 객체의 후속 처리 메소드 catch를 사용해 처리할 수도 있음
+
+```
+const wrongUrl = 'https://jsonplaceholder.typicode.com/XXX/1';
+
+// 부적절한 URL이 지정되었기 때문에 에러가 발생함
+promiseAjax(wrongUrl)
+  .then(res => console.log(res))
+  .catch(err => console.error(err)); // Error: 404
+```
+
+catch 메소드를 호출하면 내부적으로 `then(undefined, onRejected)`를 호출함. 위 예제는 내부적으로 다음과 같이 처리됨
+
+```
+const wrongUrl = 'https://jsonplaceholder.typicode.com/XXX/1';
+
+// 부적절한 URL이 지정되었기 때문에 에러가 발생함
+promiseAjax(wrongUrl)
+  .then(res => console.log(res))
+  .then(undefined, err => console.error(err)); // Error: 404
+```
+
+단 then 메소드의 두 번째 콜백 함수는 첫 번째 콜백함수에서 발생한 에러를 캐치하지 못하고 코드가 복잡해져서 가독성이 좋지 않음
+
+```
+promiseAjax('https://jsonplaceholder.typicode.com/todos/1')
+  .then(res => console.xxx(res), err => console.error(err));
+  // 두 번째 콜백 함수는 첫 번째 콜백 함수에서 발생한 에러를 캐치하지 못함
+```
+
+catch 메서드를 모든 then 메서드를 호출한 이후에 호출하면 비동기 처리에서 발생한 에러(reject 함수가 호출된 상태)뿐만 아니라 then 메서드 내부에서 발생한 에러까지 모두 캐치할 수 있음
+
+```
+promiseAjax('https://jsonplaceholder.typicode.com/todos/1')
+  .then(res => console.xxx(res))
+  .catch(err => console.error(err)); // TypeError: console.xxx is not a function
+```
+
+또한 then 메서드에 두 번째 콜백 함수를 전달하는 것보다 catch 메서드를 사용하는 것이 가독성이 좋고 명확함. 따라서 에러 처리는 then 메서드에서 하지 말고 catch 메서드를 사용하는 것을 권장함
+
 ## 6. 프로미스 체이닝
+
+비동기 함수의 처리 결과를 가지고 다른 비동기 함수를 호출해야 하는 경우 함수의 호출이 중첩(nesting)이 되어 복잡도가 높아지는 콜백 헬이 발생함. 프로미스는 후속 처리 메소드를 체이닝하여 여러 개의 프로미스를 연결하여 사용할 수 있음. 이로써 콜백 헬을 해결함
+
+Promise 객체를 반환한 비동기 함수는 프로미스 후속 처리 메소드인 then이나 catch 메소드를 사용할 수 있음. 따라서 then 메소드가 Promise 객체를 반환하도록 하면(then 메소드는 기본적으로 Promise를 반환) 여러 개의 프로미스를 연결하여 사용할 수 있음
+
+아래는 서버로 부터 특정 포스트를 취득한 후 그 포스트를 작성한 사용자의 아이디로 작성된 모든 포스트를 검색하는 예제임
+
+```
+<!DOCTYPE html>
+<html>
+<body>
+  <pre class="result"></pre>
+  <script>
+    const $result = document.querySelector('.result');
+    const render = content => { $result.textContent = JSON.stringify(content, null, 2); };
+
+    const promiseAjax = (method, url, payload) => {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open(method, url);
+        xhr.setRequestHeader('Content-type', 'application/json');
+        xhr.send(JSON.stringify(payload));
+
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState !== XMLHttpRequest.DONE) return;
+
+          if (xhr.status >= 200 && xhr.status < 400) {
+            resolve(xhr.response); // Success!
+          } else {
+            reject(new Error(xhr.status)); // Failed...
+          }
+        };
+      });
+    };
+
+    const url = 'http://jsonplaceholder.typicode.com/posts';
+
+    // 포스트 id가 1인 포스트를 검색하고 프로미스를 반환함
+    promiseAjax('GET', `${url}/1`)
+      // 포스트 id가 1인 포스트를 작성한 사용자의 아이디로 작성된 모든 포스트를 검색하고 프로미스를 반환함
+      .then(res => promiseAjax('GET', `${url}?userId=${JSON.parse(res).userId}`))
+      .then(JSON.parse)
+      .then(render)
+      .catch(console.error);
+  </script>
+</body>
+</html>
+```
 
 ## 7. 프로미스의 정적 메소드
 
+Promise는 주로 생성자 함수로 사용되지만 함수도 객체이므로 메소드를 가질 수 있음. Promise 객체는 4가지 정적 메소드를 제공함
+
 ### 7.1. Promise.resolve/Promise.reject
+
+Promise.resolve와 Promise.reject 메소드는 존재하는 값을 Promise로 래핑하기 위해 사용함
+
+정적 메소드 Promise.resolve 메소드는 인자로 전달된 값을 resolve하는 Promise를 생성함
+
+```
+const resolvedPromise = Promise.resolve([1, 2, 3]);
+resolvedPromise.then(console.log); // [ 1, 2, 3 ]
+```
+
+위 예제는 아래 예제와 동일하게 동작함
+
+```
+const resolvedPromise = new Promise(resolve => resolve([1, 2, 3]));
+resolvedPromise.then(console.log); // [ 1, 2, 3 ]
+```
+
+Promise.reject 메소드는 인자로 전달받은 값을 reject 하는 프로미스를 생성함
+
+```
+const rejectedPromise = Promise.reject(new Error('Error!'));
+rejectedPromise.catch(console.log); // Error: Error!
+```
+
+위 예제는 아래 예제와 동일하게 동작함
+
+```
+const rejectedPromise = new Promise((resolve, reject) => reject(new Error('Error!')));
+rejectedPromise.catch(console.log); // Error: Error!
+```
 
 ### 7.2. Promise.all
 
-### 7.2. Promise.race
+Promise.all 메소드는 프로미스가 담겨 있는 배열 등의 이터러블을 인자로 전달 받음. 그리고 전달받은 모든 프로미스를 병렬로 처리하고 그 처리 결과를 resolve하는 새로운 프로미스를 반환함.
+
+```
+Promise.all([
+  new Promise(resolve => setTimeout(() => resolve(1), 3000)), // 1
+  new Promise(resolve => setTimeout(() => resolve(2), 2000)), // 2
+  new Promise(resolve => setTimeout(() => resolve(3), 1000))  // 3
+]).then(console.log) // [ 1, 2, 3 ]
+  .catch(console.log);
+```
+
+Promise.all 메소드는 3개의 프로미스를 담은 배열을 전달 받음. 이때 각각의 프로미스는 다음과 같이 동작함
+
+- 첫 번째 프로미스는 3초 후에 1을 resolve해 처리 결과를 반환함
+- 두 번째 프로미스는 2초 후에 2를 resolve해 처리 결과를 반환함
+- 세 번째 프로미스는 1초 후에 3을 resolve해 처리 결과를 반환함
+
+Promise.all 메소드는 전달받은 모든 프로미스를 병렬로 처리함. 이때 모든 프로미스의 처리가 종료될 때까지 기다린 후 아래와 모든 처리 결과를 모두 resolve 또는 reject 함
+
+- 모든 프로미스의 처리가 성공하면 각각의 프로미스가 resolve한 처리 결과를 배열에 담아 resolve 하는 새로운 프로미스를 반환함. 이때 첫 번째 프로미스가 가장 나중에 처리되어도 Promise.all 메소드가 반환하는 프로미스는 첫 번째 프로미스가 resolve한 처리 결과부터 차례대로 배열에 담아 그 배열을 resolve하는 새로운 프로미스를 반환함. 즉, 처리 순서가 보장됨
+
+- 프로미스의 처리가 하나라도 실패하면 가장 먼저 실패한 프로미스가 reject하는 새로운 프로미스를 즉시 반환함
+
+```
+Promise.all([
+  new Promise((resolve, reject) => setTimeout(() => reject(new Error('Error 1!')), 3000)),
+  new Promise((resolve, reject) => setTimeout(() => reject(new Error('Error 2!')), 2000)),
+  new Promise((resolve, reject) => setTimeout(() => reject(new Error('Error 3!')), 1000))
+]).then(console.log)
+  .catch(console.log); // Error: Error 3!
+```
+
+위의 예시에서 세 번째 프로미스가 가장 먼저 실패하므로 세 번째 프로미스가 reject한 에러가 catch 메소드로 전달됨
+Promise.all 메소드는 전달 받은 이터러블 요소가 프로미스가 아닌 경우 Promise.resolve 메소드를 통해 프로미스로 래핑됨
+
+```
+Promise.all([
+  1, // => Promise.resolve(1)
+  2, // => Promise.resolve(2)
+  3  // => Promise.resolve(3)
+]).then(console.log) // [1, 2, 3]
+  .catch(console.log);
+```
+
+아래는 깃헙 id로 깃헙 사용자 이름을 취득하는 예제임
+
+```
+const githubIds = ['jeresig', 'ahejlsberg', 'ungmo2'];
+
+Promise.all(githubIds.map(id => fetch(`https://api.github.com/users/${id}`)))
+  // [Response, Response, Response] => Promise
+  .then(responses => Promise.all(responses.map(res => res.json())))
+  // [user, user, user] => Promise
+  .then(users => users.map(user => user.name))
+  // [ 'John Resig', 'Anders Hejlsberg', 'Ungmo Lee' ]
+  .then(console.log)
+  .catch(console.log);
+```
+
+### 7.3. Promise.race
+
+Promise.race 메소드는 Promise.all 메소드와 동일하게 프로미스가 담겨 있는 배열 등의 이터러블을 인자로 전달 받음. 그리고 Promise.race 메소드는 Promise.all 메소드처럼 모든 프로미스를 병렬 처리하는 것이 아니라 가장 먼저 처리된 프로미스가 resolve한 처리 결과를 resolve하는 새로운 프로미스를 반환함
+
+```
+Promise.race([
+  new Promise(resolve => setTimeout(() => resolve(1), 3000)), // 1
+  new Promise(resolve => setTimeout(() => resolve(2), 2000)), // 2
+  new Promise(resolve => setTimeout(() => resolve(3), 1000))  // 3
+]).then(console.log) // 3
+  .catch(console.log);
+```
+
+에러가 발생한 경우는 Promise.all 메소드와 동일하게 처리됨. 즉, Promise.race 메소드에 전달된 프로미스 처리가 하나라도 실패하면 가장 먼저 실패한 프로미스가 reject한 에러를 reject하는 새로운 프로미스를 즉시 반환함
+
+```
+Promise.race([
+  new Promise((resolve, reject) => setTimeout(() => reject(new Error('Error 1!')), 3000)),
+  new Promise((resolve, reject) => setTimeout(() => reject(new Error('Error 2!')), 2000)),
+  new Promise((resolve, reject) => setTimeout(() => reject(new Error('Error 3!')), 1000))
+]).then(console.log)
+  .catch(console.log); // Error: Error 3!
+```

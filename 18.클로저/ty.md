@@ -1,0 +1,337 @@
+# 1. 클로저의(closure)의 개념
+
+클로저(closure)는 자바스크립트에서 중요한 개념 중 하나로 자바스크립트에 관심을 가지고 있다면 한번쯤은 들어보았을 내용이다.
+execution context에 대한 사전 지식이 있으면 이해하기 어렵지 않은 개념이다. 클로저는 자바스크립트 고유의 개념이 아니라 함수를 일급 객체로 취급하는 함수형 프로그래밍 언어(Functional Programming language:얼랭,하스켈,리스프)에서 사용되는 중요한 특성이다.
+
+클로저는 자바스크립트의 코유 개념이 아니므로 ECMAScript 명세에 클로저의 정의가 등장하지 않는다. 클로저에 대해 MDN은 아래와 같이 정의하고 있다.
+
+> 클로저는 함수와 그 함수가 선언됐을 때 렉시컬 환경(Lexical environment)과의 조합이다.
+
+```js
+function outerFunc() {
+  var x = 10;
+  var innerFunc = function () {
+    console.log(x);
+  };
+  innerFunc();
+}
+```
+
+함수 outerFunc 내에서 내부함수 innerFunc가 선언되고 호출되었다. 이때 내부함수 innerFunc는 자신을 포함하고 있는 외부함수 outerFunc의 변수 x에 접근 할 수 있다.
+이는 함수 innerFunc가 함수 outerFunc의 내부 선언되었기 때문이다.
+
+> 스코프는 함수를 호출 할 때가 아니라 함수를 어디에 선언하였는지에 따라 결정된다. 이를 **렉시컬 스코핑(Lexical scoping)**라한다. 위 예제의 함수 innerFunc는 함수 outerFunc의 내부에서 선언되었기 때문에 함수 innerFunc의 상위 스코프는 함수 ouerFunc이다. 함수 innerFunc가 전역에 선언되었다면 함수 innerFunc의 상위 스포프는 전역 스코프가 된다.
+
+함수 innerFunc가 함수 outerFunc의 내부에 선언된 내부함수이므로 함수 innerFunc는 자신이 속한 렉시컬 스코프(전역,함수 outerFunc, 자신의 스코프)를 참조할 수있다. 이것을 실행컨텍스트의 관점에서 설명해보자.
+
+내부함수 innerFunc가 호출되면 자신의 실행 컨텍스트가 실행 컨텍스트 스택에 쌓이고 변수 객체(Variable Object)와 스코프 체인(Scope chain) 그리고 this에 바인딩할 객체가 결정된다. 이때 스코프 체인은 전역 스코프를 가리키는 전역 객체와 함수 outerFunc의 스코프를 가리키는 함수 outerFunc의 활성 객체(Activation object)그리고 함수 자신의 스코프를 가리키는 활성객체를 순차적으로 바인딩 한다.
+스코프 체인이 바인딩한 객체가 바로 렉시컬 스코프릐 실체이다.
+
+내부함수 innerFunc가 자신을 포함하고 있는 외부함수 outerFunc의 변수 x에 접근할 수 있다는것, 다시말해 상위 스코프에 접근할 수 있는 것은 렉시컬 스코프의 레퍼런스를 차례대로 저장하고 있는 실행 컨텍스트의 스코프 체인을 자바스크립트 엔진이 검색하였기에 가능한 것이다.
+
+1. innerFunc 함수 스코프(함수 자신의 스코프를 가리키는 활성 객체)내에서 변수 x를 검색한다. 검색이 실패 하였다.
+2. innerFunc 함수를 포함하는 외부 함수 ouerFunc의 스코프(함수 outerFunc의 스코프를 가리키는 함수 outerFunc의 활성 객체)에서 변수 x를 검색한다. 검색이 성공하였다.
+
+이번에는 내부 함수 innerFunc를 함수 outerFunc 내에서 호풀하는 것이 아니라 반환하도록 변경해보자.
+
+```js
+function outerFunc() {
+  var x = 10;
+  var innerfunc = function () {
+    console.log(x);
+  };
+  return innerFunc;
+}
+
+/*
+  함수 outerFunc를 호출하면 내부 함수 innerFunc가 반환된다.
+  그리고 함수 outerFunc의 샐행 컨텍스트는 소멸한다.
+*/
+var innr = outerFunc();
+inner(); //10
+```
+
+함수 outerFunc는 내부함수 innerFunct를 반환하고 생을 마감했다. 즉 함수 outerFunc는 실행된 이후 콜스텍(실행 컨텍스트 스택)에서 제거 되었으므로 함수outerFunc의 변수 x 또한 더이상 유효하지 않게 되어 변수 x에 접근할 수있은 방법은 달리 없어 보인다. 그러나 위 코드의 실행 결과는 변수 x의 값인 10이다. 이미 life-cycle이 종료되어 실행 컨텍스트 스텍에서 제거된 함수 outerFunc의 지역변수 x가 다시 부활이라도 한 듯이 동작하고이 있다. 뭔가 특별한 일이 일어 나고 있는것 같다.
+
+이처럼 자신을 포함하고 있는 외부함수보다 내부함구가 더 오래 유지되는 경, 외부 함수 밖에서 내부함수가 호출되더라도 외부함수의 지역 변수에 접근할 수있는 데 이러한 함수를 클로저(Closure)라고 부른다.
+
+위 정의에서 말하는 "함수"란 반환된 내부함수를 의미하고 "그 함수가 선언될 때의 렉시컬환경"란 내부 함수가 선언됐을 때의 스코프를 의미한다. 즉, 클로저는 반환된 내부함수가 선언됐을 때의 환경인 스코프를 기억하여 자신이 선언됐을 때의 환경(스코프)밖에서 호풀되어도 그 환경(스코프)에 접근할 수 잇는 함수를 말한다. 이를 조금 더 간단히 말하면 클로저는 자신이 생성될 때의 환경을 기억하는 함수다 라고 말할 수 있겠다.
+
+클로저의 의해 참조되는 외부함수의 변수 즉 outerFunc 함수의 변수 x를 자유변수(Free variable)라고 부른다. 클로저라는 이름은 자유변수에 함수가 닫혀있다.(closed)라는 의미로 의역하면 자유변수에 엮여 있는 함수라는 뜻이다.
+
+실행컨텍스트의 관점에 설명하면, 내부함수가 유효한 상태에서 외부함수가 종료하여 외부함수의 실행 컨텍스트가 반횐되어도, 외부함수 실행 컨텍스트 내의 활성객체(변수, 함수 선언등의 정보를 가지고 있다)는 내부함수에 의해 참조되는 한 유효하여 내부함수가 스코프 체인을 통해 참조할 수 있는 것을 의미한다.
+
+즉 외부함수가 이미 반환되었어도 외부함수 내의 변수는 이를 필요로 하는 내붛마숙 하나 이상 존재하는 경우 계속 유지된다. 이때 내부함수가 외부함수에 있는 변수의 복사본이 아니라 실제 변수에 접근한다는 거에 주의하여야 한다.
+
+# 2. 클로저의 활용
+
+클로저는 자신이 생성될 때의 환경(Lexical environment)를 기억해야 하므로 메모리 차원에서 손해를 볼 수 있다. 하지만 자바스크립트의 강력한 기능으로 이를 적극적으로 사용해야 한다. 클로저가 유용하게 사용되는 상황에 대해 살펴보자.
+
+## 2.1 상태 유지
+
+클로저가 가장 유용하게 사용되는 상황은 현재 상태를 기억하고 변경된 최신 상태를 유지 하는 것이다.
+
+```html
+<!DOCTYPE html>
+<html>
+  <body>
+    <button class="toggle">toggle</button>
+    <div class="box" style="width:100px; height:100px; background:red"></div>
+
+    <script>
+      var box = document.querySelector(".box");
+      var toggleBtn = document.querySelector(".toggle");
+
+      var toggle = (function () {
+        var isShow = false;
+
+        //1 클로저를 반환
+        return function () {
+          box.style.display = isShow ? "block" : "none";
+
+          isShow = !isShow;
+        };
+      })();
+
+      //2 이벤트 프로퍼티에 클로저 할당
+      toggleBtn.onclick = toggle;
+    </script>
+  </body>
+</html>
+```
+
+1. 즉시실행함수는 함수를 반환하고 즉시 소멸한다. 즉시실행함수가 반환한 함수는 자신이 생성됐을때 렉시컬 환경 에 속한 변수 isShow를 기억하는 클로저다. 클로저가 기억하는 변수 isShow 는 box 요소의 표시 상태를 나타낸다.
+2. 클로저 이벤트 핸들러로 이벤트 프로퍼티에 할당했다. 이벤트 프로퍼티에서 이벤트 핸들러인 클로저를 제거하지 않는 한 클로저가 기억하는 렉시컬 환경의 변수 isShow를 소멸하지 않는다. 다시 말해 현재 상태를 기억한다.
+3. 버튼을 클릭하면 이벤트 프로퍼티에 할당한 이벤트 핸들러인 클로저가 호출된다. 이때 .box 요소의 표시 상태를 나타내는 변수 isShow의 값이 변경된다. 변수 isShow는 클로저에 의해 참조되고 있기 때문에 유효하며 자신의 변경된 최신 상태를 계속해서 유지한다.
+
+이처럼 클로저는 현재 상태(위 예제의 경우 .box 요소의 표시 상태를 나타내는 isShow 변수)를 기억하고 이 상태가 변경되어도 최신의 상태를 유지해야 하는 상황에서 매우 유용하다. 만약 자바스크립트에 클로저라는 기능이 없다면 상태를 유지하기 위해 전역 변수를 사용할 수 밖에 없다. 전역 변수는 언제든지 누구나 접근할 수 잇고 변경할 수 있기 때문에 많은 부작용을 유발해 오류의 원인이 되므로 사용을 억제해야 한다.
+
+# 2.2 전역 변수의 사용 억제
+
+버튼이 클릭 될때 마다 클릭한 횟수가 누적되어 화면에 표시되는 카운터를 만들어보자. 이 예제의 클릭된 횟구가 바로 유지해야할 상태이다.
+
+```html
+<!DOCTYPE html>
+<html>
+  <body>
+    <p>전역 변수를 사용한 couting</p>
+    <button id="inclease">+</button>
+    <p id="counting">0</p>
+
+    <script>
+      var incleaseBtn = document.getElementeById("inclease");
+      var count = document.getElelmentById("count");
+
+      //카운트 상태를 유지하기 위한 전역 변수
+      var counter = 0;
+
+      function increase() {
+        return ++counter;
+      }
+
+      incleaseBtn.onclick = function () {
+        count.innerHTML = increase();
+      };
+    </script>
+  </body>
+</html>
+```
+
+위 코드는 잘 동작하지만 오류를 발생시킬 가능성을 내포하고 있는 좋지 않는 코드다. increase함수는 호출되기 직전에 전역변수 counter의 값이 반드시 0이여야 제대로 동작한다. 하지만 변수 counter는 전역 변수이기 때문에 언제 든지 누구나 접근할 수 잇고 변셩할 수 있다. 이는 의도치 않게 값이 변경될수 있다는 것을 의미한다. 만약 누군가에 의해 의도치 암ㅎ게 전역 변수 counter의 값이 변경됐다면 이는 오류로 이어진다. 변수 counter는 카운터를 관리하는 increase함수가 관리하는 것이 바람직 하다. 전역 변수 counter를 increase함수의 지역변수로 반꾸어 의도치 않는 상태 변경을 방지해보자.
+
+```html
+<!DOCTYPE html>
+<html>
+  <body>
+    <p>지역 변수를 사용한 Counting</p>
+    <button id="inclease">+</button>
+    <p id="count">0</p>
+    <script>
+      var incleaseBtn = document.getElementById("inclease");
+      var count = document.getElementById("count");
+
+      function increase() {
+        // 카운트 상태를 유지하기 위한 지역 변수
+        var counter = 0;
+        return ++counter;
+      }
+
+      incleaseBtn.onclick = function () {
+        count.innerHTML = increase();
+      };
+    </script>
+  </body>
+</html>
+```
+
+전역변수를 지역변수로 변경하여 의도치 않은 상태 변경은 방지했다. 하지만 increase함수가 호출될 때 마다 지역변수 counter를 0으로 초기화하기 때문에 언제나 1이 표시된다. 다시 말해 **변경된 이전 상태를 기억하지 못한다.** 이전 ㅅ아태를 기억하도록 클로저를 사용하여 이 문제를 해결해보자.
+
+```html
+<!DOCTYPE html>
+<html>
+  <body>
+    <p>클로저를 사용한 Counting</p>
+    <button id="inclease">+</button>
+    <p id="count">0</p>
+    <script>
+      var incleaseBtn = document.getElementById("inclease");
+      var count = document.getElementById("count");
+
+      var increase = (function () {
+        //카운터 상태를 유지하기 위한 자유 변수
+        var counter = 0;
+        //클로저를 반환
+        return function () {
+          return ++counter;
+        };
+      })();
+
+      inCleaseBtn.onclick = function () {
+        counter.innerHTML = increase();
+      };
+    </script>
+  </body>
+</html>
+```
+
+스크립트가 실행되면 즉시실행함수 가 호출되고 변수 increase에는 함수 `function (){return ++ counter}`가 할당된다. 이 함수는 자신이 생성됐을 때의 렉시컬 환경을 기억하는 클로저다. 즉시실행함수는 호출된 이후 소멸되지만 즉시실행함수가 반환한 함수는 변수 increase에 할당되어 inclease 버튼을 클릭하면 클릭 이벤트 핸들러 내부에서 호출된다. 이때 클로저인 이 함수는 자신이 선언됐을 때의 렉시컬 환경인 즉시실행함수의 스코프에 속한 지역변수 counter를 기억한다. 따라서 즉시 실행함수의 변수 counter에 접근할 수 있고 변수 counter는 자신을 참조하는 함수가 소멸될때 까지 유지된다.
+
+즉시실행함수는 한번만 실행되므로 increase가 호출될 때마다 변수 counter가 재차 초기화될 일은 없을 것이다. 변수 counter는 외부에서 직접 접근할 수 없는 `private`변수이므로 전역변수를 사용했을 때와 같이 의도되지 않은 변경을 걱정할 필요도 없기 때문에 보다 안정적인 프로그래밍이 가능하다.
+
+> 변수의 값은 누군가에 의해 언제든지 변경될 수 있어 오류 발생의 근본적인 원인이 될 수 있다. 상태 변경이나 가변 (mutable)데이터를 피하고 불변성 (Immutability)을 지향하는 함수형 프로그래밍에서 부수효과를 최대한 억제하여 오류를 피하고 프로그램의 안전성을 높이기 위해 클로저는 적극적으로 사용된다.
+
+아래의 함수형 프로그램밍에서 클로저를 활용하는 간단한 예제이다.
+
+```js
+// 함수를 인자로 전달받고 함수를 반환하는 고차 함수
+// 이 함수가 반환하는 함수는 클로저로서 카운트 상태를 유지하기 위한 자유 변수 counter를 기억한다.
+function makeCounter(predicate) {
+  var counter = 0;
+
+  return function () {
+    counter = predicate(counter);
+    return counter;
+  };
+}
+
+//보조함수
+function increase(n) {
+  return ++n;
+}
+
+// 보조함수
+function decrease(n){
+  returne --n
+}
+
+
+//함수로 함수를 행성한다.
+//makeCounter 함수는 보조 함수를 인자로 전달받아 함수를 반환한다.
+const increase = makeCounter(increase);
+console.log(increaser()) //1
+console.log(increaser())//2
+
+//increaser 함수와는 별개의 독립된 렉시컬 환경을 갖기 때문에 카운터 상태가 연동하지 않는다.
+const decreaser = makeCounter(decrease);
+console.log(decreaser()) //-1
+console.log(decreaser())//-2
+```
+
+함수 makeCounter는 보조 함수를 인자로 전달 받고 함수를 반환하는 고차함수이다. 함수 makeCounter가 반환하는 함수는 자신이 생성됐을 때의 렉시컬 환경인 함수 makeCounter의 스코프에 속한 변수 counter을 기억하는 클로저다.
+함수 makeCounter는 인자로 전달받은 보조 함수를 합성하여 자신이 반환하는 함수 동작을 변경할 수 있따. 이때 주의해야 할 것은 함수 makeCounter를 호출해 함수를 반환할 때 반환된 함수는 자신만의 독립된 렉시컬 환경을 갖는다는 것이다. 이는 함수를 호출하면 그때만다 새로운 렉시컬 환경이 생성되기 때문이다. 위예제에서 변수 increaser와 변수 decreaser에 할당된 함수는 각각 자신만의 독립된 렉시컬 환경을 갖기 때문에 카운트를 유지하기 위한 자유 변수 counter를 공유하지 않아 카운터의 증감이 연동되지 않는다. 따라서 동릭된 카운터가 아니라 연동하여 증감이 가능한 카운터를 만들려면 렉시컬 환경을 공유하는 클로저를 만들어야 한다.
+
+## 2.3 정보의 은닉
+
+이번에는 생성자 함수 Counter를 생성하고 이를 통해 counter 객체를 만들어보자.
+
+```js
+function Counter() {
+  // 카운트를 유지하기 위한 자유 변수
+  var counter = 0;
+
+  // 클로저
+  this.increase = function () {
+    return ++counter;
+  };
+
+  // 클로저
+  this.decrease = function () {
+    return --counter;
+  };
+}
+
+const counter = new Counter();
+
+console.log(counter.increase()); // 1
+console.log(counter.decrease()); // 0
+```
+
+생성자 함수 Counter는 increase, decrease 메소드를 갖는 인스턴스를 생성한다. 이 메소드들은 모두 자신이 생성됐을 때의 렉시컬 환경인 생성자 함수 Counter의 스코프에 속한 변수 counter를 기억하는 클로저이며 렉시컬 환경을 공유한다. 생성자 함수가 함수가 생성한 객체의 메소드는 객체 프로퍼티에만 접근할 숭 ㅣㅅ는 것이 아니며 자신이 기억하는 렉시컬 환경의 변수에도 접근할 수 있다.
+
+이때 생성자 함수 Counter의 변수 counter는 this에 바인딩된 프로퍼티가 아니라 변수다. counter가 this에 바인딩된 프로퍼티라면 생성자함수 Counter가 생성한 인스턴스를 통해 외부에 접근이 가능한 publc 프로퍼티가 되지만 생성자 함수 Counter내에서 선언된 변수 counter는 생성자 함수 Counter외부에서 접근할수 없다. 하지만 생성자 함수 Counter가 생성한 인스턴스의 메소드인 increase, decrease는 클로저이기 때문에 자신이 생성됐을 때의 렉시컬 환경인 생성자 함수 Counter의 변수 counter에 접근할 수 있다. 이러한 클로저 특징을 사용해 클래스 기반의 언어의 private 키워드를 흉내낼수 있다.
+
+## 2.4 자주 발생하는 실수
+
+아래의 예제는 클로저를 상요할 때 자주 발생할 수 있는 실수에 관한 예제다.
+
+```js
+var arr = [];
+
+for (var i = 0; i < 5; i++) {
+  arr[i] = function () {
+    return i;
+  };
+}
+
+for (var j = 0; j < arr.length; j++) {
+  console.log(arr[j]());
+}
+```
+
+배열 arr에 5개의 함수가 할당되고 각각의 함수는 순차적으로 0,1,2,3,4,를 반환할 것으로 기대하겠지만 결과는 그렇지 않다. for문에서 사용한 변수i는 전역 변수 이기 때문이다. 이러한 문제를 클로저를 사용해 바르게 동작하는 코드로 만들어보자.
+
+```js
+var arr = [];
+
+for (var i = 0; i < 5; i++) {
+  arr[i] = (function (id) {
+    return function () {
+      return id;
+    };
+  })(i);
+}
+
+for (var j = 0; j < arr.length; j++) {
+  console.log(arr[j]());
+}
+```
+
+1. 배열 arr에는 즉시실행함수에 의해 함수가 반환된다.
+2. 이때 즉시실행함수 i를 인자로 전달받고 매개변수 id에 할당한 후 내부 함수를 반환하고 life-cycle이 종료된다. 매개변수 idsms 자유변수가 된다.
+3. 배열 arr에 할당된 함수는 id를 반환한다. 이때 id는 상위 스코프의 자유변수이므로 그 값이 유지된다.
+
+위 예제는 자바스크립트의 함수 레벨 스코프 특성으로 인해 for 루프의 초기문에서 사용된 변수의 스코프가 전역이 되기 때문에 발생하는 현상이다. ES6의 let 키워드를 사용하면 이와 같은 문제는 말끔히 해결된다.
+
+```js
+const arr = [];
+
+for (let i = 0; i < 5; i++) {
+  arr[i] = function () {
+    return i;
+  };
+}
+
+for (let i = 0; i < arr.length; i++) {
+  console.log(arr[i]());
+}
+```
+
+또는 함수형 프로그래밍 기법인 고차함수를 사용하는 방법이 있다. 이 방법은 변수와 반복문의 사용을 억제할 수 있기 때문에 애플리케이션의 오류를 줄이고 가독성을 좋게 만든다.
+
+```js
+const arr = new Array(5).fill();
+
+arr.forEach((v, i, array) => (array[i] = () => i));
+
+arr.forEach((f) => console.log(f()));
+```
